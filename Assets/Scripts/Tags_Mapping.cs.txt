@@ -1,0 +1,212 @@
+using UnityEngine;
+using S7.Net;
+using System;
+
+public class SimplePLCMapper : MonoBehaviour
+{
+    [Header("PLC Settings")]
+    public string plcIP = "192.168.0.1";
+
+    private Plc plc;
+
+    // Events for Visual Scripting
+    public static event Action<bool> OnCurtainSensor;
+    public static event Action<bool> OnWorkpieceDetected;
+    public static event Action<bool> OnStartSensor;
+    public static event Action<bool> OnEndSensor;
+
+    [Header("Inputs from DB3")]
+    public bool curtainSensor;
+    public bool objInChuteR;
+    public bool objInChuteB;
+    public bool objInChuteS;
+    public bool cylinderRetractedR;
+    public bool cylinderRetractedB;
+    public bool cylinderRetractedS;
+    public bool cylinderExtendedR;
+    public bool cylinderExtendedB;
+    public bool cylinderExtendedS;
+    public bool startSensor;
+    public bool endSensor;
+    public bool workpieceDetected;
+    public bool workpieceNotBlack;
+    public bool workpieceSilver;
+    public bool spawnchuter;
+    public bool spawnchuteb;
+    public bool spawnchutes;
+    public bool destroyB;
+    public bool destroyR;
+    public bool destroyS;
+    public bool destroy;
+    public bool PLCStart;
+    public bool DtStart;             // %M100.5
+    public int numberofred;
+    public int numberofblack;
+    public int numberofsilver;
+
+    // Previous values for event triggering
+    private bool prevCurtainSensor, prevWorkpieceDetected, prevStartSensor, prevEndSensor;
+
+    [Header("Outputs")]
+    public bool extendCylinderR;      // %Q4.0
+    public bool extendCylinderB;      // %Q4.1
+    public bool extendCylinderS;      // %Q4.2
+    public bool greenLight;           // %Q4.3
+    public bool orangeLight;          // %Q4.4
+    public bool redLight;             // %Q4.5
+    public bool stopper;              // %Q5.0
+    public bool conveyorReverse;      // %Q5.1
+    public bool conveyorForward;      // %Q5.2
+    public int colour;                // %MW14
+    public int typeselected;          // %MW12
+    public int previoustype;          // %MW16
+    public bool Stop;                 // %M100.1
+    public bool Reset;                // %M111.3
+    public bool Red;                  // %M100.2
+    public bool Black;                // %M100.3
+    public bool Silver;               // %M100.4
+
+
+    void Start()
+    {
+        // Connect to PLC
+        plc = new Plc(CpuType.S71200, plcIP, 0, 1);
+        plc.Open();
+    }
+
+    void Update()
+    {
+        if (plc.IsConnected)
+        {
+            ReadInputs();
+            ReadOutputs();
+            CheckForEvents();
+        }
+    }
+
+    void ReadInputs()
+    {
+        //// Read inputs from DB3
+        //curtainSensor = (bool)plc.Read("DB3.DBX0.0");
+        //objInChuteR = (bool)plc.Read("DB3.DBX0.1");
+        //objInChuteB = (bool)plc.Read("DB3.DBX0.2");
+        //objInChuteS = (bool)plc.Read("DB3.DBX0.3");
+        //cylinderRetractedR = (bool)plc.Read("DB3.DBX0.4");
+        //cylinderRetractedB = (bool)plc.Read("DB3.DBX0.5");
+        //cylinderRetractedS = (bool)plc.Read("DB3.DBX0.6");
+        //cylinderExtendedR = (bool)plc.Read("DB3.DBX0.7");
+        //cylinderExtendedB = (bool)plc.Read("DB3.DBX1.0");
+        //cylinderExtendedS = (bool)plc.Read("DB3.DBX1.1");
+        //startSensor = (bool)plc.Read("DB3.DBX1.2");
+        //endSensor = (bool)plc.Read("DB3.DBX1.3");
+        //workpieceDetected = (bool)plc.Read("DB3.DBX1.4");
+        //workpieceNotBlack = (bool)plc.Read("DB3.DBX1.5");
+        //workpieceSilver = (bool)plc.Read("DB3.DBX1.6");
+        //spawnchuter = (bool)plc.Read("DB3.DBX1.7");
+        //spawnchuteb = (bool)plc.Read("DB3.DBX2.0");
+        //spawnchutes = (bool)plc.Read("DB3.DBX2.1");
+
+        // Read inputs from IW4
+        curtainSensor = (bool)plc.Read("I12.5");
+        objInChuteR = (bool)plc.Read("I10.1");
+        objInChuteB = (bool)plc.Read("I10.5");
+        objInChuteS = (bool)plc.Read("I12.0");
+        cylinderRetractedR = (bool)plc.Read("I10.0");
+        cylinderRetractedB = (bool)plc.Read("I10.3");
+        cylinderRetractedS = (bool)plc.Read("I10.6");
+        cylinderExtendedR = (bool)plc.Read("I10.2");
+        cylinderExtendedB = (bool)plc.Read("I10.4");
+        cylinderExtendedS = (bool)plc.Read("I10.7");
+        startSensor = (bool)plc.Read("I12.7");
+        endSensor = (bool)plc.Read("I12.6");
+        workpieceDetected = (bool)plc.Read("I12.1");
+        workpieceNotBlack = (bool)plc.Read("I12.2");
+        workpieceSilver = (bool)plc.Read("I12.3");
+        spawnchuter = (bool)plc.Read("DB3.DBX1.7");
+        spawnchuteb = (bool)plc.Read("DB3.DBX2.0");
+        spawnchutes = (bool)plc.Read("DB3.DBX2.1");
+        destroyB = (bool)plc.Read("DB3.DBX2.2");
+        destroyR = (bool)plc.Read("DB3.DBX2.3");
+        destroyS = (bool)plc.Read("DB3.DBX2.4");
+        destroy = (bool)plc.Read("DB3.DBX2.5");
+        previoustype = Convert.ToInt16(plc.Read("MW16"));
+
+
+
+    }
+
+    void ReadOutputs()
+    {
+        // Read outputs for visualization
+        extendCylinderR = (bool)plc.Read("Q4.0");
+        extendCylinderB = (bool)plc.Read("Q4.1");
+        extendCylinderS = (bool)plc.Read("Q4.6");
+        greenLight = (bool)plc.Read("Q4.3");
+        orangeLight = (bool)plc.Read("Q4.4");
+        redLight = (bool)plc.Read("Q4.5");
+        stopper = (bool)plc.Read("Q6.0");
+        conveyorReverse = (bool)plc.Read("Q6.1");
+        conveyorForward = (bool)plc.Read("Q6.2");
+        colour = Convert.ToInt16(plc.Read("MW14")); 
+        typeselected = Convert.ToInt16(plc.Read("MW12"));
+        numberofred = Convert.ToInt16(plc.Read("MW200"));
+        numberofblack = Convert.ToInt16(plc.Read("MW210"));
+        numberofsilver = Convert.ToInt16(plc.Read("MW220"));
+
+    }
+    void CheckForEvents()
+    {
+        if (curtainSensor != prevCurtainSensor) OnCurtainSensor?.Invoke(curtainSensor);
+        if (workpieceDetected != prevWorkpieceDetected) OnWorkpieceDetected?.Invoke(workpieceDetected);
+        if (startSensor != prevStartSensor) OnStartSensor?.Invoke(startSensor);
+        if (endSensor != prevEndSensor) OnEndSensor?.Invoke(endSensor);
+
+        prevCurtainSensor = curtainSensor;
+        prevWorkpieceDetected = workpieceDetected;
+        prevStartSensor = startSensor;
+        prevEndSensor = endSensor;
+    }
+
+    // Method to write inputs to DB3 from Unity
+    public void WriteInput(string inputName, bool value)
+    {
+        if (!plc.IsConnected) return;
+
+        switch (inputName.ToLower())
+        {
+            case "curtainsensor": plc.Write("DB3.DBX0.0", value); break;
+            case "objinchuter": plc.Write("DB3.DBX0.1", value); break;
+            case "objinchuteb": plc.Write("DB3.DBX0.2", value); break;
+            case "objinchutes": plc.Write("DB3.DBX0.3", value); break;
+            case "cylinderretractedr": plc.Write("DB3.DBX0.4", value); break;
+            case "cylinderretractedb": plc.Write("DB3.DBX0.5", value); break;
+            case "cylinderretracteds": plc.Write("DB3.DBX0.6", value); break;
+            case "cylinderextendedr": plc.Write("DB3.DBX0.7", value); break;
+            case "cylinderextendedb": plc.Write("DB3.DBX1.0", value); break;
+            case "cylinderextendeds": plc.Write("DB3.DBX1.1", value); break;
+            case "startsensor": plc.Write("DB3.DBX1.2", value); break;
+            case "endsensor": plc.Write("DB3.DBX1.3", value); break;
+            case "workpiecedetected": plc.Write("DB3.DBX1.4", value); break;
+            case "workpiecenotblack": plc.Write("DB3.DBX1.5", value); break;
+            case "workpiecesilver": plc.Write("DB3.DBX1.6", value); break;
+            case "dtstart": plc.Write("DB3.DBX2.6", value); break;
+            case "reset": plc.Write("M111.3", value); break;
+            case "red": plc.Write("M111.0", value); break;
+            case "black": plc.Write("M111.1", value); break;
+            case "silver": plc.Write("M111.2", value); break;
+            case "plcstart": plc.Write("M100.0", value); break;
+            case "stop": plc.Write("M100.1", value); break;
+
+
+                // Add more as needed
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (plc != null && plc.IsConnected)
+        {
+            plc.Close();
+        }
+    }
+}
