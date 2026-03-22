@@ -1,5 +1,5 @@
 ﻿// ============================================================
-// FILE: SkyboxManager2.cs (No changes needed, but included for completeness)
+// FILE: SkyboxManager2.cs 
 // ============================================================
 using UnityEngine;
 
@@ -51,7 +51,7 @@ public class SkyboxManager2 : MonoBehaviour
 
     void Start()
     {
-        SetClearMorning();
+        SetClearNoon();
     }
 
     void Update()
