@@ -52,5 +52,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Fifth-Year-Project.slnx"
+    "dotnet.defaultSolution": "Smart solar drier Vr simulation.slnx"
 }
